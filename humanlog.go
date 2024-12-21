@@ -31,21 +31,6 @@ var LevelColors = [...]*color.Color{
 	log.FatalLevel: color.New(color.FgHiRed),
 }
 
-var KeyColors = [...]*color.Color{
-	color.New(color.FgRed),
-	color.New(color.FgGreen),
-	color.New(color.FgYellow),
-	color.New(color.FgBlue),
-	color.New(color.FgMagenta),
-	color.New(color.FgCyan),
-	color.New(color.FgHiRed),
-	color.New(color.FgHiGreen),
-	color.New(color.FgHiYellow),
-	color.New(color.FgHiBlue),
-	color.New(color.FgHiMagenta),
-	color.New(color.FgHiCyan),
-}
-
 // LevelSymbol maps log levels to a string representing it.
 var LevelSymbol = [...]string{
 	log.DebugLevel: "D",
