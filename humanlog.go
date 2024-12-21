@@ -73,22 +73,34 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
+	h.buf.Reset()
 	h.lengths["msg"] = max(h.lengths["msg"], sw)
-	colr.Fprintf(h.buf, "%s %s", e.Timestamp.Format(h.Timestamp), level)
-	fmt.Fprintf(h.buf, " %*s", -h.lengths["msg"], e.Message)
+	_, err := colr.Fprintf(h.buf, "%s %s", e.Timestamp.Format(h.Timestamp), level)
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintf(h.buf, " %*s", -h.lengths["msg"], e.Message)
+	if err != nil {
+		return err
+	}
 	for i, name := range names {
 		if name == "source" {
 			continue
 		}
-		h.writeNameValue(e, name, i, names)
+		err = h.writeNameValue(e, name, i, names)
+		if err != nil {
+			return err
+		}
 	}
-	fmt.Fprintln(h.buf)
-	h.buf.WriteTo(h.Writer)
-	h.buf.Reset()
-	return nil
+	_, err = fmt.Fprintln(h.buf)
+	if err != nil {
+		return err
+	}
+	_, err = h.buf.WriteTo(h.Writer)
+	return err
 }
 
-func (h *Handler) writeNameValue(e *log.Entry, name string, i int, names []string) {
+func (h *Handler) writeNameValue(e *log.Entry, name string, i int, names []string) error {
 	val := e.Fields.Get(name)
 	sw := runewidth.StringWidth(fmt.Sprintf("%v", val))
 	h.lengths[name] = max(h.lengths[name], sw)
@@ -98,14 +110,17 @@ func (h *Handler) writeNameValue(e *log.Entry, name string, i int, names []strin
 		h.lengths[name] = sw
 	}
 	if isTypeRightAlignable(val) {
-		fmt.Fprintf(h.buf, " %s=%*v", h.getKeyColor(name).Sprint(name), h.lengths[name], val)
-		return
+		_, err := fmt.Fprintf(h.buf, " %s=%*v", h.getKeyColor(name).Sprint(name), h.lengths[name], val)
+		if err != nil {
+			return err
+		}
 	}
 	var pad string
 	if sw < l && i+1 != len(names) {
 		pad = strings.Repeat(" ", l-sw)
 	}
-	fmt.Fprintf(h.buf, " %s=%v%s", h.getKeyColor(name).Sprint(name), val, pad)
+	_, err := fmt.Fprintf(h.buf, " %s=%v%s", h.getKeyColor(name).Sprint(name), val, pad)
+	return err
 }
 
 func sortNames(e *log.Entry, names []string) []string {
