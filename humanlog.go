@@ -67,9 +67,10 @@ type Handler struct {
 // New return a new [Handler] writing to [w].
 func New(w io.Writer) *Handler {
 	h := &Handler{
-		lengths: map[string]int{},
-		Writer:  w,
-		buf:     &bytes.Buffer{},
+		lengths:   map[string]int{},
+		Writer:    w,
+		buf:       &bytes.Buffer{},
+		Timestamp: "060102 15:04:05",
 	}
 	if f, ok := w.(*os.File); ok {
 		h.Writer = colorable.NewColorable(f)
