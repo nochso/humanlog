@@ -80,28 +80,32 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 		if name == "source" {
 			continue
 		}
-		val := e.Fields.Get(name)
-		sw := runewidth.StringWidth(fmt.Sprintf("%v", val))
-		h.lengths[name] = max(h.lengths[name], sw)
-		l := h.lengths[name]
-		if sw+20 < l {
-			l = sw
-			h.lengths[name] = sw
-		}
-		if isTypeRightAlignable(val) {
-			fmt.Fprintf(h.buf, " %s=%*v", h.getKeyColor(name).Sprint(name), h.lengths[name], val)
-		} else {
-			var pad string
-			if sw < l && i+1 != len(names) {
-				pad = strings.Repeat(" ", l-sw)
-			}
-			fmt.Fprintf(h.buf, " %s=%v%s", h.getKeyColor(name).Sprint(name), val, pad)
-		}
+		h.writeNameValue(e, name, i, names)
 	}
 	fmt.Fprintln(h.buf)
 	h.buf.WriteTo(h.Writer)
 	h.buf.Reset()
 	return nil
+}
+
+func (h *Handler) writeNameValue(e *log.Entry, name string, i int, names []string) {
+	val := e.Fields.Get(name)
+	sw := runewidth.StringWidth(fmt.Sprintf("%v", val))
+	h.lengths[name] = max(h.lengths[name], sw)
+	l := h.lengths[name]
+	if sw+20 < l {
+		l = sw
+		h.lengths[name] = sw
+	}
+	if isTypeRightAlignable(val) {
+		fmt.Fprintf(h.buf, " %s=%*v", h.getKeyColor(name).Sprint(name), h.lengths[name], val)
+		return
+	}
+	var pad string
+	if sw < l && i+1 != len(names) {
+		pad = strings.Repeat(" ", l-sw)
+	}
+	fmt.Fprintf(h.buf, " %s=%v%s", h.getKeyColor(name).Sprint(name), val, pad)
 }
 
 func sortNames(e *log.Entry, names []string) []string {
