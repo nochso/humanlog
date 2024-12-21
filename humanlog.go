@@ -158,9 +158,9 @@ func isTypeRightAlignable(x interface{}) bool {
 
 func (h *Handler) getKeyColor(key string) *color.Color {
 	if key == "error" {
-		return KeyColors[6]
+		return LevelColors[log.ErrorLevel]
 	}
 	sum := crc32.ChecksumIEEE([]byte(key))
-	sum = sum % uint32(len(KeyColors))
-	return KeyColors[sum]
+	r, g, b := byte(sum>>24)/2+64, byte(sum>>16)/2+64, byte(sum>>8)/2+64
+	return color.RGB(int(r), int(g), int(b))
 }
