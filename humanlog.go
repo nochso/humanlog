@@ -166,10 +166,10 @@ func (h *Handler) getKeyColor(key string) *color.Color {
 		return LevelColors[log.ErrorLevel]
 	}
 	sum := crc32.ChecksumIEEE([]byte(key))
-	r, g, b := mapColor(byte(sum>>24)), mapColor(byte(sum>>16)), mapColor(byte(sum>>8))
+	r, g, b := mapColor(sum>>24), mapColor(sum>>16), mapColor(sum>>8)
 	return color.RGB(int(r), int(g), int(b))
 }
 
-func mapColor(v byte) byte {
-	return v/2 + 64
+func mapColor(v uint32) byte {
+	return byte(v*3/4 + 31)
 }
