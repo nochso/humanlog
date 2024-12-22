@@ -24,11 +24,11 @@ var Default = New(os.Stderr)
 
 // LevelColors maps log levels to a color.
 var LevelColors = [...]*color.Color{
-	log.DebugLevel: color.New(color.FgWhite),
-	log.InfoLevel:  color.New(color.FgBlue),
+	log.DebugLevel: color.New(color.FgBlue),
+	log.InfoLevel:  color.New(color.FgGreen),
 	log.WarnLevel:  color.New(color.FgYellow),
 	log.ErrorLevel: color.New(color.FgRed),
-	log.FatalLevel: color.New(color.FgHiRed),
+	log.FatalLevel: color.New(color.BgRed, color.FgWhite),
 }
 
 // LevelSymbol maps log levels to a string representing it.
