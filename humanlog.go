@@ -114,6 +114,7 @@ func (h *Handler) writeNameValue(e *log.Entry, name string, i int, names []strin
 		if err != nil {
 			return err
 		}
+		return nil
 	}
 	var pad string
 	if sw < l && i+1 != len(names) {
