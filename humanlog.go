@@ -74,12 +74,11 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 	defer h.mu.Unlock()
 
 	h.buf.Reset()
-	h.lengths["msg"] = max(h.lengths["msg"], sw)
 	_, err := colr.Fprintf(h.buf, "%s %s", e.Timestamp.Format(h.Timestamp), level)
 	if err != nil {
 		return err
 	}
-	_, err = fmt.Fprintf(h.buf, " %*s", -h.lengths["msg"], e.Message)
+	_, err = fmt.Fprintf(h.buf, " %s", e.Message)
 	if err != nil {
 		return err
 	}
