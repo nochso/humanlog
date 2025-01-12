@@ -45,14 +45,20 @@ type Handler struct {
 	mu        sync.Mutex
 	Writer    io.Writer
 	Timestamp string
-	lengths   map[string]int
+	lengths   map[string]keyStat
 	buf       *bytes.Buffer
+}
+
+type keyStat struct {
+	MaxLength      int
+	Count          int
+	RightAlignable int
 }
 
 // New return a new [Handler] writing to [w].
 func New(w io.Writer) *Handler {
 	h := &Handler{
-		lengths:   map[string]int{},
+		lengths:   map[string]keyStat{},
 		Writer:    w,
 		buf:       &bytes.Buffer{},
 		Timestamp: "060102 15:04:05.000",
@@ -101,22 +107,28 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 func (h *Handler) writeNameValue(e *log.Entry, name string, i int, names []string) error {
 	val := e.Fields.Get(name)
 	sw := runewidth.StringWidth(fmt.Sprintf("%v", val))
-	h.lengths[name] = max(h.lengths[name], sw)
-	l := h.lengths[name]
-	if sw+20 < l {
-		l = sw
-		h.lengths[name] = sw
+	kstat, _ := h.lengths[name]
+	kstat.MaxLength = max(kstat.MaxLength, sw)
+	kstat.Count++
+	if sw+20 < kstat.MaxLength {
+		kstat.MaxLength = sw
 	}
-	if h.isTypeRightAlignable(val) {
-		_, err := fmt.Fprintf(h.buf, " %s=%*v", h.getKeyColor(name).Sprint(name), h.lengths[name], val)
+	isRight := h.isTypeRightAlignable(val)
+	if isRight {
+		kstat.RightAlignable++
+	}
+	isRight = kstat.RightAlignable > kstat.Count/2
+	h.lengths[name] = kstat
+	if isRight {
+		_, err := fmt.Fprintf(h.buf, " %s=%*v", h.getKeyColor(name).Sprint(name), kstat.MaxLength, val)
 		if err != nil {
 			return err
 		}
 		return nil
 	}
 	var pad string
-	if sw < l && i+1 != len(names) {
-		pad = strings.Repeat(" ", l-sw)
+	if sw < kstat.MaxLength && i+1 != len(names) {
+		pad = strings.Repeat(" ", kstat.MaxLength-sw)
 	}
 	_, err := fmt.Fprintf(h.buf, " %s=%v%s", h.getKeyColor(name).Sprint(name), val, pad)
 	return err
