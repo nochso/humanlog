@@ -67,8 +67,7 @@ func New(w io.Writer) *Handler {
 func (h *Handler) HandleLog(e *log.Entry) error {
 	colr := LevelColors[e.Level]
 	level := LevelSymbol[e.Level]
-	names := sortNames(e, e.Fields.Names())
-	sw := runewidth.StringWidth(e.Message)
+	names := h.sortNames(e, e.Fields.Names())
 
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -108,7 +107,7 @@ func (h *Handler) writeNameValue(e *log.Entry, name string, i int, names []strin
 		l = sw
 		h.lengths[name] = sw
 	}
-	if isTypeRightAlignable(val) {
+	if h.isTypeRightAlignable(val) {
 		_, err := fmt.Fprintf(h.buf, " %s=%*v", h.getKeyColor(name).Sprint(name), h.lengths[name], val)
 		if err != nil {
 			return err
@@ -123,10 +122,10 @@ func (h *Handler) writeNameValue(e *log.Entry, name string, i int, names []strin
 	return err
 }
 
-func sortNames(e *log.Entry, names []string) []string {
+func (h *Handler) sortNames(e *log.Entry, names []string) []string {
 	sort.Slice(names, func(a, b int) bool {
-		aright := isTypeRightAlignable(e.Fields.Get(names[a]))
-		bright := isTypeRightAlignable(e.Fields.Get(names[b]))
+		aright := h.isTypeRightAlignable(e.Fields.Get(names[a]))
+		bright := h.isTypeRightAlignable(e.Fields.Get(names[b]))
 		if aright != bright {
 			return aright
 		}
@@ -144,7 +143,7 @@ func max(a, b int) int {
 
 var reNumType = regexp.MustCompile(`(?i)^\d+(\.\d+)? ?([a-z]{1,5})?$`)
 
-func isTypeRightAlignable(x interface{}) bool {
+func (h *Handler) isTypeRightAlignable(x interface{}) bool {
 	switch v := x.(type) {
 	case uint, uint8, uint16, uint32, uint64,
 		int, int8, int16, int32, int64,
