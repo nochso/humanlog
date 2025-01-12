@@ -61,7 +61,7 @@ func New(w io.Writer) *Handler {
 		lengths:   map[string]keyStat{},
 		Writer:    w,
 		buf:       &bytes.Buffer{},
-		Timestamp: "060102 15:04:05.000",
+		Timestamp: "15:04:05.000",
 	}
 	if f, ok := w.(*os.File); ok {
 		h.Writer = colorable.NewColorable(f)
