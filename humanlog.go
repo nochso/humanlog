@@ -83,9 +83,11 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 	if err != nil {
 		return err
 	}
-	_, err = fmt.Fprintf(h.buf, " %s", e.Message)
-	if err != nil {
-		return err
+	if e.Message != "" {
+		_, err = fmt.Fprintf(h.buf, " %s", e.Message)
+		if err != nil {
+			return err
+		}
 	}
 	for i, name := range names {
 		if name == "source" {
