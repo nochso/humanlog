@@ -185,5 +185,5 @@ func (h *Handler) getKeyColor(key string) *color.Color {
 
 func mapColor(v uint32) byte {
 	v = uint32(byte(v))
-	return byte(v*3/4 + 31)
+	return byte(v*5/10 + 105)
 }
