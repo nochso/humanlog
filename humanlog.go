@@ -108,6 +108,9 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 
 func (h *Handler) writeNameValue(e *log.Entry, name string, i int, names []string) error {
 	val := e.Fields.Get(name)
+	if dur, ok := val.(time.Duration); ok {
+		val = Duration(dur)
+	}
 	sw := runewidth.StringWidth(fmt.Sprintf("%v", val))
 	kstat, _ := h.lengths[name]
 	kstat.MaxLength = max(kstat.MaxLength, sw)
@@ -186,4 +189,45 @@ func (h *Handler) getKeyColor(key string) *color.Color {
 func mapColor(v uint32) byte {
 	v = uint32(byte(v))
 	return byte(v*5/10 + 105)
+}
+
+var durations = []struct {
+	d time.Duration
+	s string
+}{
+	{d: time.Hour * 24 * 365, s: "%dy"},
+	{d: time.Hour * 24 * 30, s: "%dm"},
+	{d: time.Hour * 24 * 7, s: "%dw"},
+	{d: time.Hour * 24, s: "%dd"},
+	{d: time.Hour, s: "%dh"},
+	{d: time.Minute, s: "%dm"},
+	{d: time.Second, s: "%ds"},
+}
+
+func Duration(d time.Duration) string {
+	if d < time.Microsecond {
+		return fmt.Sprintf("%dns", d)
+	} else if d < time.Millisecond {
+		return fmt.Sprintf("%.4gµs", float64(d)/1000)
+	} else if d < time.Second {
+		return fmt.Sprintf("%.4gms", float64(d)/1000/1000)
+	} else if d < time.Minute {
+		return fmt.Sprintf("%.4gs", float64(d)/1000/1000/1000)
+	}
+	var s string
+	last := -1
+	for i := range durations {
+		if d >= durations[i].d {
+			if i-1 != last { // stop instead of skipping a unit
+				break
+			}
+			last = i
+			s += fmt.Sprintf(durations[i].s, d/durations[i].d)
+			d %= durations[i].d
+			if len(s) >= 5 {
+				break
+			}
+		}
+	}
+	return s
 }
